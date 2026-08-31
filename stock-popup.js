@@ -3,20 +3,9 @@
  * 全局事件委托：点击任意带 data-stock 的元素即可打开。
  */
 
+import { fetchStockDetail } from './api-client.js?v=3';
+
 const POPUP_ID = 'stock-detail-popup';
-
-function isFileProtocol() {
-  return typeof window !== 'undefined' && window.location.protocol === 'file:';
-}
-
-async function getJSON(path) {
-  if (isFileProtocol()) {
-    throw new Error('local file protocol: 请通过 http://localhost:3000 访问以查看实时数据');
-  }
-  const res = await fetch(path);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
 
 function formatNumber(n, d = 2) {
   if (n === undefined || n === null || Number.isNaN(Number(n))) return '--';
@@ -186,9 +175,7 @@ async function loadDetail(code, fallbackName, market) {
   updateEl.textContent = '加载中…';
 
   try {
-    const nameParam = fallbackName ? `&name=${encodeURIComponent(fallbackName)}` : '';
-    const marketParam = market ? `&market=${encodeURIComponent(market)}` : '';
-    const data = await getJSON(`/api/stock-detail?code=${encodeURIComponent(code)}${nameParam}${marketParam}`);
+    const data = await fetchStockDetail(code, fallbackName, market);
     renderDetail(data);
     scheduleRefresh(code, fallbackName, market);
   } catch (err) {
