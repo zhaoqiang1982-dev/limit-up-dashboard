@@ -65,8 +65,15 @@ export async function fetchDragonTiger() {
   try { return await getJSON('/api/dragon-tiger'); } catch (e) { return fetchDragonTigerDirect(); }
 }
 
-export async function fetchStockDetail(code) {
-  try { return await getJSON(`/api/stock-detail?code=${encodeURIComponent(code)}`); } catch (e) { return fetchStockDetailDirect(code); }
+export async function fetchStockDetail(code, fallbackName = '', market = '') {
+  try {
+    let url = `/api/stock-detail?code=${encodeURIComponent(code)}`;
+    if (fallbackName) url += `&name=${encodeURIComponent(fallbackName)}`;
+    if (market) url += `&market=${encodeURIComponent(market)}`;
+    return await getJSON(url);
+  } catch (e) {
+    return fetchStockDetailDirect(code, fallbackName, market);
+  }
 }
 
 export async function fetchQuotes(codes) {
