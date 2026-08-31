@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自选股</title>
+    <style id="theme-vars">
+:root {
+  --brand-primary: #2563eb;
+  --brand-primary-foreground: #ffffff;
+  --brand-primary-50: #eff6ff;
+  --brand-primary-100: #dbeafe;
+  --brand-primary-200: #bfdbfe;
+  --brand-primary-300: #93c5fd;
+  --brand-primary-500: #3b82f6;
+  --brand-primary-600: #2563eb;
+  --brand-primary-700: #1d4ed8;
+  --brand-primary-900: #1e3a8a;
+  --brand-background: #f4f5f7;
+  --brand-foreground: #111827;
+  --brand-card: #ffffff;
+  --brand-card-foreground: #111827;
+  --brand-popover: #ffffff;
+  --brand-popover-foreground: #111827;
+  --brand-muted: #f3f4f6;
+  --brand-muted-foreground: #6b7280;
+  --brand-border: #e5e7eb;
+  --brand-input: #e5e7eb;
+  --brand-ring: #2563eb;
+  --brand-secondary: #f3f4f6;
+  --brand-secondary-foreground: #374151;
+  --brand-accent: #f3f4f6;
+  --brand-accent-foreground: #374151;
+  --brand-destructive: #ef4444;
+  --brand-destructive-foreground: #ffffff;
+  --brand-state-up: #ef4444;
+  --brand-state-up-bg: #fef2f2;
+  --brand-state-down: #22c55e;
+  --brand-state-down-bg: #f0fdf4;
+  --brand-state-warning: #f59e0b;
+  --brand-state-info: #3b82f6;
+  --brand-radius-xs: 2px;
+  --brand-radius-sm: 4px;
+  --brand-radius-md: 8px;
+  --brand-radius-lg: 16px;
+  --brand-radius-pill: 999px;
+  --brand-shadow-1: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 1px rgba(15, 23, 42, 0.03);
+  --brand-shadow-2: 0 8px 24px -8px rgba(15, 23, 42, 0.18);
+  --brand-font-sans: Inter, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --brand-font-mono: "SF Mono", "SFMono-Regular", ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
+}
+html.light, html:not(.dark) { color-scheme: light; }
+body {
+  font-family: var(--brand-font-sans);
+  background-color: var(--brand-background);
+  color: var(--brand-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.cjk-wrap { text-wrap: balance; word-break: keep-all; overflow-wrap: break-word; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--brand-background);
+    --color-foreground: var(--brand-foreground);
+    --color-card: var(--brand-card);
+    --color-card-foreground: var(--brand-card-foreground);
+    --color-popover: var(--brand-popover);
+    --color-popover-foreground: var(--brand-popover-foreground);
+    --color-primary: var(--brand-primary);
+    --color-primary-foreground: var(--brand-primary-foreground);
+    --color-secondary: var(--brand-secondary);
+    --color-secondary-foreground: var(--brand-secondary-foreground);
+    --color-muted: var(--brand-muted);
+    --color-muted-foreground: var(--brand-muted-foreground);
+    --color-accent: var(--brand-accent);
+    --color-accent-foreground: var(--brand-accent-foreground);
+    --color-destructive: var(--brand-destructive);
+    --color-destructive-foreground: var(--brand-destructive-foreground);
+    --color-border: var(--brand-border);
+    --color-input: var(--brand-input);
+    --color-ring: var(--brand-ring);
+    --radius-sm: var(--brand-radius-sm);
+    --radius-md: var(--brand-radius-md);
+    --radius-lg: var(--brand-radius-lg);
+  }
+  @layer base {
+    body { background: var(--brand-background); color: var(--brand-foreground); }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--brand-background); }
+      .text-background { color: var(--brand-background); }
+      .border-background { border-color: var(--brand-background); }
+      .ring-background { --tw-ring-color: var(--brand-background); }
+      .bg-foreground { background-color: var(--brand-foreground); }
+      .text-foreground { color: var(--brand-foreground); }
+      .border-foreground { border-color: var(--brand-foreground); }
+      .ring-foreground { --tw-ring-color: var(--brand-foreground); }
+      .bg-card { background-color: var(--brand-card); }
+      .text-card { color: var(--brand-card); }
+      .border-card { border-color: var(--brand-card); }
+      .ring-card { --tw-ring-color: var(--brand-card); }
+      .bg-card-foreground { background-color: var(--brand-card-foreground); }
+      .text-card-foreground { color: var(--brand-card-foreground); }
+      .border-card-foreground { border-color: var(--brand-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--brand-card-foreground); }
+      .bg-popover { background-color: var(--brand-popover); }
+      .text-popover { color: var(--brand-popover); }
+      .border-popover { border-color: var(--brand-popover); }
+      .ring-popover { --tw-ring-color: var(--brand-popover); }
+      .bg-popover-foreground { background-color: var(--brand-popover-foreground); }
+      .text-popover-foreground { color: var(--brand-popover-foreground); }
+      .border-popover-foreground { border-color: var(--brand-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--brand-popover-foreground); }
+      .bg-primary { background-color: var(--brand-primary); }
+      .text-primary { color: var(--brand-primary); }
+      .border-primary { border-color: var(--brand-primary); }
+      .ring-primary { --tw-ring-color: var(--brand-primary); }
+      .bg-primary-foreground { background-color: var(--brand-primary-foreground); }
+      .text-primary-foreground { color: var(--brand-primary-foreground); }
+      .border-primary-foreground { border-color: var(--brand-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--brand-primary-foreground); }
+      .bg-secondary { background-color: var(--brand-secondary); }
+      .text-secondary { color: var(--brand-secondary); }
+      .border-secondary { border-color: var(--brand-secondary); }
+      .ring-secondary { --tw-ring-color: var(--brand-secondary); }
+      .bg-secondary-foreground { background-color: var(--brand-secondary-foreground); }
+      .text-secondary-foreground { color: var(--brand-secondary-foreground); }
+      .border-secondary-foreground { border-color: var(--brand-secondary-foreground); }
+      .ring-secondary-foreground { --tw-ring-color: var(--brand-secondary-foreground); }
+      .bg-muted { background-color: var(--brand-muted); }
+      .text-muted { color: var(--brand-muted); }
+      .border-muted { border-color: var(--brand-muted); }
+      .ring-muted { --tw-ring-color: var(--brand-muted); }
+      .bg-muted-foreground { background-color: var(--brand-muted-foreground); }
+      .text-muted-foreground { color: var(--brand-muted-foreground); }
+      .border-muted-foreground { border-color: var(--brand-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--brand-muted-foreground); }
+      .bg-accent { background-color: var(--brand-accent); }
+      .text-accent { color: var(--brand-accent); }
+      .border-accent { border-color: var(--brand-accent); }
+      .ring-accent { --tw-ring-color: var(--brand-accent); }
+      .bg-accent-foreground { background-color: var(--brand-accent-foreground); }
+      .text-accent-foreground { color: var(--brand-accent-foreground); }
+      .border-accent-foreground { border-color: var(--brand-accent-foreground); }
+      .ring-accent-foreground { --tw-ring-color: var(--brand-accent-foreground); }
+      .bg-destructive { background-color: var(--brand-destructive); }
+      .text-destructive { color: var(--brand-destructive); }
+      .border-destructive { border-color: var(--brand-destructive); }
+      .ring-destructive { --tw-ring-color: var(--brand-destructive); }
+      .bg-destructive-foreground { background-color: var(--brand-destructive-foreground); }
+      .text-destructive-foreground { color: var(--brand-destructive-foreground); }
+      .border-destructive-foreground { border-color: var(--brand-destructive-foreground); }
+      .ring-destructive-foreground { --tw-ring-color: var(--brand-destructive-foreground); }
+      .bg-border { background-color: var(--brand-border); }
+      .text-border { color: var(--brand-border); }
+      .border-border { border-color: var(--brand-border); }
+      .ring-border { --tw-ring-color: var(--brand-border); }
+      .bg-input { background-color: var(--brand-input); }
+      .text-input { color: var(--brand-input); }
+      .border-input { border-color: var(--brand-input); }
+      .ring-input { --tw-ring-color: var(--brand-input); }
+      .bg-ring { background-color: var(--brand-ring); }
+      .text-ring { color: var(--brand-ring); }
+      .border-ring { border-color: var(--brand-ring); }
+      .ring-ring { --tw-ring-color: var(--brand-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex; align-items: center; justify-content: center;
+        -webkit-mask-size: contain; mask-size: contain;
+        -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+        -webkit-mask-position: center; mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+      <div class="max-w-md mx-auto min-h-screen bg-background relative">
+        <header class="sticky top-0 z-30 bg-card border-b border-border shadow-sm" id="status-bar">
+          <div class="px-3 pt-2 pb-1 flex items-center justify-between text-xs text-muted-foreground">
+            <span id="tick-time" class="tabular-nums">--:--:--</span>
+            <span class="text-[10px] cjk-wrap">实时行情 · 数据仅供参考</span>
+          </div>
+          <div id="risk-disclaimer" class="px-3 py-1 bg-primary-50 text-[10px] text-primary-700 cjk-wrap leading-tight">
+            风险提示：内容仅为公开市场数据整理，不构成投资建议，历史表现不代表未来走势。
+          </div>
+          <div class="px-3 py-2 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <h1 class="text-lg font-bold text-foreground cjk-wrap">自选股</h1>
+              <span id="watch-count" class="inline-flex items-center rounded-sm bg-primary-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary-700">0 只</span>
+            </div>
+          </div>
+          <div id="index-ticker" class="px-3 py-2 bg-muted/50">
+            <div class="grid grid-cols-3 gap-2">
+              <div class="index-item text-center" data-index="上证指数" data-code="000001">
+                <div class="text-xs font-medium text-foreground mb-0.5"><span class="index-name">上证指数</span><span class="index-arrow ml-0.5" style="color: var(--brand-state-up);">↑</span></div>
+                <div class="text-sm font-bold tabular-nums index-value" style="color: var(--brand-state-up);">--</div>
+                <div class="text-[10px] font-medium tabular-nums index-change" style="color: var(--brand-state-up);">--</div>
+              </div>
+              <div class="index-item text-center" data-index="创业板指" data-code="399006">
+                <div class="text-xs font-medium text-foreground mb-0.5"><span class="index-name">创业板指</span><span class="index-arrow ml-0.5" style="color: var(--brand-state-up);">↑</span></div>
+                <div class="text-sm font-bold tabular-nums index-value" style="color: var(--brand-state-up);">--</div>
+                <div class="text-[10px] font-medium tabular-nums index-change" style="color: var(--brand-state-up);">--</div>
+              </div>
+              <div class="index-item text-center" data-index="科创50" data-code="000688">
+                <div class="text-xs font-medium text-foreground mb-0.5"><span class="index-name">科创50</span><span class="index-arrow ml-0.5" style="color: var(--brand-state-up);">↑</span></div>
+                <div class="text-sm font-bold tabular-nums index-value" style="color: var(--brand-state-up);">--</div>
+                <div class="text-[10px] font-medium tabular-nums index-change" style="color: var(--brand-state-up);">--</div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <nav class="bg-card px-3 border-b border-border">
+          <div class="flex gap-4 overflow-x-auto no-scrollbar" role="tablist" aria-label="行情视图">
+            <a id="tab-ladder" role="tab" href="index.html" class="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">连板天梯</a>
+            <a id="tab-sectors" role="tab" href="sectors.html" class="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">板块涨停</a>
+            <a id="tab-dragon" role="tab" href="dragon-tiger.html" class="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">龙虎榜</a>
+            <a id="tab-broken" role="tab" href="broken-boards.html" class="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">炸板池</a>
+            <a id="tab-watch" role="tab" href="watchlist.html" class="relative py-2.5 text-sm font-semibold text-primary border-b-2 border-primary whitespace-nowrap">自选股</a>
+          </div>
+        </nav>
+
+        <!-- Search -->
+        <section class="px-3 py-3 bg-card border-b border-border">
+          <div class="relative">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"></i>
+            <input id="watch-search" type="text" inputmode="search" autocomplete="off"
+              class="w-full pl-9 pr-9 py-2 rounded-md bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="输入代码 / 名称 / 拼音搜索股票">
+            <button id="search-clear" type="button" class="hidden absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <div id="search-results" class="mt-2 hidden rounded-md border border-border bg-card shadow-sm overflow-hidden"></div>
+        </section>
+
+        <!-- Watchlist -->
+        <section id="watchlist-view" class="bg-card">
+          <div id="watchlist-list"></div>
+        </section>
+
+        <!-- Error state -->
+        <section id="error-state" class="hidden px-4 py-12 text-center" aria-live="assertive">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-destructive/10 mb-3">
+            <i data-lucide="alert-circle" class="w-6 h-6 text-destructive"></i>
+          </div>
+          <h2 class="text-base font-semibold text-foreground mb-1">行情加载失败</h2>
+          <p class="text-sm text-muted-foreground mb-3">网络连接异常或数据源暂时不可用。</p>
+          <button onclick="loadWatchlist()" class="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium">重新加载</button>
+        </section>
+
+        <footer class="real-time-footer px-3 py-3 bg-card border-t border-border">
+          <div class="flex items-center justify-between text-xs text-muted-foreground">
+            <div class="flex items-center gap-1.5">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-state-up opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2" style="background-color: var(--brand-state-up);"></span>
+              </span>
+              <span class="tabular-nums" id="footer-tick-time">--:--:--</span>
+            </div>
+            <span class="text-[10px] cjk-wrap" id="footer-desc">自选股 · 东方财富实时行情</span>
+          </div>
+        </footer>
+      </div>
+    </main>
+
+    <style>
+      :root { --market-up: var(--brand-state-up); --market-down: var(--brand-state-down); }
+      .bg-state-up-bg { background-color: var(--brand-state-up-bg); }
+      .bg-state-down-bg { background-color: var(--brand-state-down-bg); }
+      .text-state-up { color: var(--brand-state-up); }
+      .text-state-down { color: var(--brand-state-down); }
+      .rounded-pill { border-radius: var(--brand-radius-pill); }
+      .tabular-nowrap { white-space: nowrap; font-variant-numeric: tabular-nums; }
+      html, body { overflow-x: hidden; }
+      main > div { max-width: 28rem; }
+      header { position: sticky; top: 0; }
+      .real-time-footer { margin-top: auto; }
+      .search-result-row { cursor: pointer; }
+      .search-result-row:hover { background-color: var(--brand-muted); }
+    </style>
+
+    <script type="module">
+      import { fetchIndex, fetchQuotes, fetchSearch, renderIndexTicker, updateTickTime } from './api-client.js?v=4';
+      import {
+        getWatchlist, addWatch, removeWatch, isWatched, renderWatchlistTable
+      } from './watchlist.js?v=1';
+      import { initStockPopup } from './stock-popup.js';
+
+      initStockPopup();
+
+      const listContainer = document.getElementById('watchlist-list');
+      const searchInput = document.getElementById('watch-search');
+      const searchResults = document.getElementById('search-results');
+      const searchClear = document.getElementById('search-clear');
+      const watchCount = document.getElementById('watch-count');
+
+      function updateCount() {
+        const n = getWatchlist().length;
+        watchCount.textContent = `${n} 只`;
+      }
+
+      async function loadWatchlist() {
+        updateCount();
+        try {
+          const list = getWatchlist();
+          let quotes = [];
+          if (list.length > 0) {
+            const res = await fetchQuotes(list.map((i) => ({ code: i.code, market: i.market || '' })));
+            quotes = res.list || [];
+          }
+          renderWatchlistTable(list, quotes, listContainer);
+          document.getElementById('error-state').classList.add('hidden');
+        } catch (err) {
+          console.warn('[watchlist] load failed', err);
+          document.getElementById('error-state').classList.remove('hidden');
+        }
+      }
+      window.loadWatchlist = loadWatchlist;
+
+      async function loadIndex() {
+        try {
+          const data = await fetchIndex();
+          renderIndexTicker(data);
+        } catch (err) {
+          console.warn('[index] load failed', err);
+        }
+      }
+
+      // Search
+      let searchAbort;
+      async function doSearch(keyword) {
+        if (searchAbort) clearTimeout(searchAbort);
+        if (!keyword.trim()) {
+          searchResults.classList.add('hidden');
+          searchResults.innerHTML = '';
+          return;
+        }
+        searchAbort = setTimeout(async () => {
+          try {
+            const res = await fetchSearch(keyword.trim());
+            const list = res.list || [];
+            if (list.length === 0) {
+              searchResults.innerHTML = `<div class="px-3 py-2 text-sm text-muted-foreground">未找到相关股票</div>`;
+              searchResults.classList.remove('hidden');
+              return;
+            }
+            searchResults.innerHTML = list.map((s) => {
+              const watched = isWatched(s.code);
+              return `
+                <div class="search-result-row px-3 py-2.5 flex items-center justify-between gap-2 border-b border-border last:border-0" data-code="${s.code}" data-name="${s.name}" data-market="${s.market || ''}">
+                  <div class="min-w-0">
+                    <div class="text-sm font-semibold text-foreground cjk-wrap">${s.name}</div>
+                    <div class="text-xs text-muted-foreground tabular-nums">${s.code} · ${s.type || 'A股'}</div>
+                  </div>
+                  <button type="button" class="search-add-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium ${watched ? 'bg-secondary text-secondary-foreground' : 'bg-primary text-primary-foreground'}" data-code="${s.code}" data-name="${s.name}" data-market="${s.market || ''}" data-watched="${watched}">
+                    <i data-lucide="${watched ? 'check' : 'plus'}" class="w-3 h-3"></i>
+                    <span>${watched ? '已添加' : '添加'}</span>
+                  </button>
+                </div>
+              `;
+            }).join('');
+            searchResults.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          } catch (err) {
+            console.warn('[search] failed', err);
+          }
+        }, 250);
+      }
+
+      searchInput.addEventListener('input', (e) => {
+        const v = e.target.value;
+        searchClear.classList.toggle('hidden', !v);
+        doSearch(v);
+      });
+      searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClear.classList.add('hidden');
+        searchResults.classList.add('hidden');
+        searchResults.innerHTML = '';
+        searchInput.focus();
+      });
+      searchResults.addEventListener('click', (e) => {
+        const btn = e.target.closest('.search-add-btn');
+        const row = e.target.closest('.search-result-row');
+        if (btn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const code = btn.dataset.code;
+          const name = btn.dataset.name;
+          const market = btn.dataset.market;
+          if (isWatched(code)) {
+            removeWatch(code);
+            btn.dataset.watched = 'false';
+            btn.className = 'search-add-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-primary text-primary-foreground';
+            btn.innerHTML = `<i data-lucide="plus" class="w-3 h-3"></i><span>添加</span>`;
+          } else {
+            addWatch(code, name, market);
+            btn.dataset.watched = 'true';
+            btn.className = 'search-add-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-secondary text-secondary-foreground';
+            btn.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i><span>已添加</span>`;
+          }
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          loadWatchlist();
+          return;
+        }
+        if (row && !isWatched(row.dataset.code)) {
+          addWatch(row.dataset.code, row.dataset.name, row.dataset.market);
+          loadWatchlist();
+          doSearch(searchInput.value);
+        }
+      });
+
+      // Initial
+      loadIndex();
+      loadWatchlist();
+      setInterval(loadIndex, 5000);
+      setInterval(loadWatchlist, 5000);
+      setInterval(updateTickTime, 1000);
+      updateTickTime();
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    </script>
+</body>
+</html>

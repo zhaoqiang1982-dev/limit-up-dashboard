@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>龙虎榜</title>
+    <style id="theme-vars">
+:root {
+  --brand-primary: #2563eb;
+  --brand-primary-foreground: #ffffff;
+  --brand-primary-50: #eff6ff;
+  --brand-primary-100: #dbeafe;
+  --brand-primary-200: #bfdbfe;
+  --brand-primary-300: #93c5fd;
+  --brand-primary-500: #3b82f6;
+  --brand-primary-600: #2563eb;
+  --brand-primary-700: #1d4ed8;
+  --brand-background: #f4f5f7;
+  --brand-foreground: #111827;
+  --brand-card: #ffffff;
+  --brand-card-foreground: #111827;
+  --brand-popover: #ffffff;
+  --brand-popover-foreground: #111827;
+  --brand-muted: #f3f4f6;
+  --brand-muted-foreground: #6b7280;
+  --brand-border: #e5e7eb;
+  --brand-input: #e5e7eb;
+  --brand-ring: #2563eb;
+  --brand-state-up: #ef4444;
+  --brand-state-up-bg: #fef2f2;
+  --brand-state-down: #22c55e;
+  --brand-state-down-bg: #f0fdf4;
+  --brand-state-warning: #f59e0b;
+  --brand-state-info: #3b82f6;
+  --brand-radius-xs: 2px;
+  --brand-radius-sm: 4px;
+  --brand-radius-md: 8px;
+  --brand-radius-lg: 16px;
+  --brand-radius-pill: 999px;
+  --brand-shadow-1: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 1px rgba(15, 23, 42, 0.03);
+  --brand-shadow-2: 0 8px 24px -8px rgba(15, 23, 42, 0.18);
+  --brand-font-sans: Inter, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --brand-font-mono: "SF Mono", "SFMono-Regular", ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
+  --brand-primary-900: #1e3a8a;
+  --brand-secondary: #f3f4f6;
+  --brand-secondary-foreground: #374151;
+  --brand-accent: #f3f4f6;
+  --brand-accent-foreground: #374151;
+  --brand-destructive: #ef4444;
+  --brand-destructive-foreground: #ffffff;
+}
+html.light, html:not(.dark) { color-scheme: light; }
+body { font-family: var(--brand-font-sans); background-color: var(--brand-background); color: var(--brand-foreground); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.cjk-wrap { text-wrap: balance; word-break: keep-all; overflow-wrap: break-word; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--brand-background);
+    --color-foreground: var(--brand-foreground);
+    --color-card: var(--brand-card);
+    --color-card-foreground: var(--brand-card-foreground);
+    --color-popover: var(--brand-popover);
+    --color-popover-foreground: var(--brand-popover-foreground);
+    --color-primary: var(--brand-primary);
+    --color-primary-foreground: var(--brand-primary-foreground);
+    --color-secondary: var(--brand-secondary);
+    --color-secondary-foreground: var(--brand-secondary-foreground);
+    --color-muted: var(--brand-muted);
+    --color-muted-foreground: var(--brand-muted-foreground);
+    --color-accent: var(--brand-accent);
+    --color-accent-foreground: var(--brand-accent-foreground);
+    --color-destructive: var(--brand-destructive);
+    --color-destructive-foreground: var(--brand-destructive-foreground);
+    --color-border: var(--brand-border);
+    --color-input: var(--brand-input);
+    --color-ring: var(--brand-ring);
+    --radius-sm: var(--brand-radius-sm);
+    --radius-md: var(--brand-radius-md);
+    --radius-lg: var(--brand-radius-lg);
+  }
+  @layer base {
+    body { background: var(--brand-background); color: var(--brand-foreground); }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--brand-background); }
+      .text-foreground { color: var(--brand-foreground); }
+      .bg-card { background-color: var(--brand-card); }
+      .text-primary { color: var(--brand-primary); }
+      .border-primary { border-color: var(--brand-primary); }
+      .bg-primary { background-color: var(--brand-primary); }
+      .text-primary-foreground { color: var(--brand-primary-foreground); }
+      .bg-primary-50 { background-color: var(--brand-primary-50); }
+      .text-primary-700 { color: var(--brand-primary-700); }
+      .bg-secondary { background-color: var(--brand-secondary); }
+      .text-secondary-foreground { color: var(--brand-secondary-foreground); }
+      .text-muted-foreground { color: var(--brand-muted-foreground); }
+      .bg-muted { background-color: var(--brand-muted); }
+      .border-border { border-color: var(--brand-border); }
+      .text-state-up { color: var(--brand-state-up); }
+      .bg-state-up-bg { background-color: var(--brand-state-up-bg); }
+      .text-state-down { color: var(--brand-state-down); }
+      .bg-state-down-bg { background-color: var(--brand-state-down-bg); }
+      .rounded-pill { border-radius: var(--brand-radius-pill); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] { display: inline-flex; align-items: center; justify-content: center; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; background-color: currentColor; }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+      <div class="max-w-md mx-auto min-h-screen bg-background relative">
+        <header class="sticky top-0 z-30 bg-card border-b border-border shadow-sm" id="status-bar">
+          <div class="px-3 pt-2 pb-1 flex items-center justify-between text-xs text-muted-foreground">
+            <span id="tick-time" class="tabular-nums">11:08:00</span>
+            <span class="text-[10px] cjk-wrap">实时行情 · 数据仅供参考</span>
+          </div>
+          <div id="risk-disclaimer" class="px-3 py-1 bg-primary-50 text-[10px] text-primary-700 cjk-wrap leading-tight">
+            风险提示：内容仅为公开市场数据整理，不构成投资建议，历史表现不代表未来走势。
+          </div>
+          <div class="px-3 py-2 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <h1 class="text-lg font-bold text-foreground cjk-wrap">龙虎榜</h1>
+              <span class="inline-flex items-center rounded-sm bg-state-up-bg px-1.5 py-0.5 text-[10px] font-semibold" style="color: var(--brand-state-up);">A股</span>
+            </div>
+          </div>
+          <div id="index-ticker" class="px-3 py-2 bg-muted/50">
+            <div class="grid grid-cols-3 gap-2">
+              <div class="index-item text-center" data-index="上证指数" data-code="000001">
+                <div class="text-xs font-medium text-foreground mb-0.5"><span class="index-name">上证指数</span><span class="index-arrow ml-0.5" style="color: var(--brand-state-up);">↑</span></div>
+                <div class="text-sm font-bold tabular-nums index-value" style="color: var(--brand-state-up);">3956.57</div>
+                <div class="text-[10px] font-medium tabular-nums index-change" style="color: var(--brand-state-up);">+44.05 +1.13%</div>
+              </div>
+              <div class="index-item text-center" data-index="创业板指" data-code="399006">
+                <div class="text-xs font-medium text-foreground mb-0.5"><span class="index-name">创业板指</span><span class="index-arrow ml-0.5" style="color: var(--brand-state-up);">↑</span></div>
+                <div class="text-sm font-bold tabular-nums index-value" style="color: var(--brand-state-up);">--</div>
+                <div class="text-[10px] font-medium tabular-nums index-change" style="color: var(--brand-state-up);">--</div>
+              </div>
+              <div class="index-item text-center" data-index="科创50" data-code="000688">
+                <div class="text-xs font-medium text-foreground mb-0.5"><span class="index-name">科创50</span><span class="index-arrow ml-0.5" style="color: var(--brand-state-up);">↑</span></div>
+                <div class="text-sm font-bold tabular-nums index-value" style="color: var(--brand-state-up);">--</div>
+                <div class="text-[10px] font-medium tabular-nums index-change" style="color: var(--brand-state-up);">--</div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <nav class="bg-card px-3 border-b border-border">
+          <div class="flex gap-4 overflow-x-auto no-scrollbar" role="tablist" aria-label="行情视图">
+            <a id="tab-ladder" role="tab" href="index.html" class="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">连板天梯</a>
+            <a id="tab-sectors" role="tab" href="sectors.html" class="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">板块涨停</a>
+            <a id="tab-dragon" role="tab" href="dragon-tiger.html" class="relative py-2.5 text-sm font-semibold text-primary border-b-2 border-primary whitespace-nowrap">龙虎榜</a>
+            <a id="tab-broken" role="tab" href="broken-boards.html" class="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">炸板池</a>
+            <a id="tab-watch" role="tab" href="watchlist.html" class="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">自选股</a>
+          </div>
+        </nav>
+
+        <section id="dragon-tiger-view" class="px-3 py-3 space-y-3">
+          <div id="dragon-list" class="space-y-3">
+            <!-- JS fills here -->
+          </div>
+        </section>
+
+        <section id="empty-state" class="hidden px-4 py-12 text-center" aria-live="polite">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-3">
+            <i data-lucide="inbox" class="w-6 h-6 text-muted-foreground"></i>
+          </div>
+          <h2 class="text-base font-semibold text-foreground mb-1">暂无龙虎榜数据</h2>
+          <p class="text-sm text-muted-foreground">当前未收录龙虎榜个股，请稍后再试。</p>
+        </section>
+
+        <section id="error-state" class="hidden px-4 py-12 text-center" aria-live="assertive">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-destructive/10 mb-3">
+            <i data-lucide="alert-circle" class="w-6 h-6 text-destructive"></i>
+          </div>
+          <h2 class="text-base font-semibold text-foreground mb-1">行情加载失败</h2>
+          <p class="text-sm text-muted-foreground mb-3">网络连接异常或数据源暂时不可用。</p>
+          <button onclick="fetchMarketData()" class="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium">重新加载</button>
+        </section>
+
+        <footer class="real-time-footer px-3 py-3 bg-card border-t border-border">
+          <div class="flex items-center justify-between text-xs text-muted-foreground">
+            <div class="flex items-center gap-1.5">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-state-up opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2" style="background-color: var(--brand-state-up);"></span>
+              </span>
+              <span class="tabular-nums" id="footer-tick-time">11:08:00</span>
+            </div>
+            <span class="text-[10px] cjk-wrap" id="footer-desc">龙虎榜 · 东方财富实时行情</span>
+          </div>
+        </footer>
+      </div>
+    </main>
+
+    <style>
+      html, body { overflow-x: hidden; }
+      main > div { max-width: 28rem; }
+      header { position: sticky; top: 0; }
+      .real-time-footer { margin-top: auto; }
+      .bg-destructive\/10 { background-color: rgba(239,68,68,0.1); }
+      .text-destructive { color: var(--brand-destructive); }
+    </style>
+
+    <script type="module">
+      import { fetchIndex, renderIndexTicker, updateTickTime } from './api-client.js?v=3';
+      import { initStockPopup } from './stock-popup.js';
+      import { attachStarButtons } from './watchlist.js?v=1';
+
+      initStockPopup();
+
+      function formatNumber(n, digits = 2) {
+        if (n === undefined || n === null || isNaN(n)) return '-';
+        return Number(n).toLocaleString('zh-CN', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+      }
+
+      function upDownColorClass(v) {
+        return Number(v) >= 0 ? 'text-state-up' : 'text-state-down';
+      }
+
+      async function fetchDragonTiger() {
+        const res = await fetch('/api/dragon-tiger');
+        if (!res.ok) throw new Error('fetch failed');
+        return res.json();
+      }
+
+      function renderDragonTiger(data) {
+        const container = document.getElementById('dragon-list');
+        const list = (data && data.list) || [];
+        document.getElementById('empty-state').classList.toggle('hidden', list.length > 0);
+        if (!list.length) {
+          container.innerHTML = '';
+          return;
+        }
+        container.innerHTML = list.map((item, idx) => {
+          const reasons = (item.explanations || []).slice(0, 2).map(r => `<span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg cjk-wrap" style="color: var(--brand-state-up);">${r}</span>`).join('');
+          const color = upDownColorClass(item.changePercent);
+          const sign = Number(item.changePercent) >= 0 ? '+' : '';
+          return `
+          <article class="bg-card rounded-lg border border-border shadow-sm p-3" data-stock="${item.code}" data-name="${item.name}" data-market="">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold bg-primary text-primary-foreground">${idx + 1}</span>
+                <span class="text-sm font-bold text-foreground cjk-wrap">${item.name}</span>
+                <span class="text-xs text-muted-foreground tabular-nowrap">${item.code}</span>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="text-sm font-bold tabular-nums ${color}">${sign}${formatNumber(item.changePercent, 2)}%</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="bg-muted/50 rounded-md p-2">
+                <div class="text-[10px] text-muted-foreground mb-0.5">收盘价</div>
+                <div class="text-sm font-semibold tabular-nums">${formatNumber(item.close, 2)}</div>
+              </div>
+              <div class="bg-muted/50 rounded-md p-2">
+                <div class="text-[10px] text-muted-foreground mb-0.5">龙虎榜成交额</div>
+                <div class="text-sm font-semibold tabular-nums">${formatNumber(item.accumAmount / 10000, 2)}亿</div>
+              </div>
+              <div class="bg-muted/50 rounded-md p-2">
+                <div class="text-[10px] text-muted-foreground mb-0.5">净买入</div>
+                <div class="text-sm font-semibold tabular-nums ${Number(item.netBuyAmt) >= 0 ? 'text-state-up' : 'text-state-down'}">${item.netBuyAmt >= 0 ? '+' : ''}${formatNumber(item.netBuyAmt / 10000, 2)}亿</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-xs text-muted-foreground">
+              <div class="flex items-center gap-2">
+                <span>买<span class="tabular-nums text-state-up">${item.buyTimes}</span></span>
+                <span>卖<span class="tabular-nums text-state-down">${item.sellTimes}</span></span>
+                <span>换手<span class="tabular-nums">${formatNumber(item.turnoverRate, 2)}%</span></span>
+              </div>
+              <div class="flex gap-1">${reasons}</div>
+            </div>
+          </article>`;
+        }).join('');
+        attachStarButtons(container, { selector: 'article[data-stock]' });
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+
+      async function loadMarketData() {
+        try {
+          const [index, dt] = await Promise.all([fetchIndex(), fetchDragonTiger()]);
+          renderIndexTicker(index);
+          renderDragonTiger(dt);
+        } catch (err) {
+          console.warn('真实行情加载失败：', err.message);
+        }
+      }
+      window.fetchMarketData = loadMarketData;
+
+      loadMarketData();
+      setInterval(loadMarketData, 5000);
+      setInterval(updateTickTime, 3000);
+      updateTickTime();
+    </script>
+</body>
+</html>

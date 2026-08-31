@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>板块涨停</title>
+    <style id="theme-vars">
+:root {
+  /* Brand primary - cool indigo for UI chrome */
+  --brand-primary: #2563eb;
+  --brand-primary-foreground: #ffffff;
+  --brand-primary-50: #eff6ff;
+  --brand-primary-100: #dbeafe;
+  --brand-primary-200: #bfdbfe;
+  --brand-primary-300: #93c5fd;
+  --brand-primary-500: #3b82f6;
+  --brand-primary-600: #2563eb;
+  --brand-primary-700: #1d4ed8;
+
+  /* Neutral surfaces */
+  --brand-background: #f4f5f7;
+  --brand-foreground: #111827;
+  --brand-card: #ffffff;
+  --brand-card-foreground: #111827;
+  --brand-popover: #ffffff;
+  --brand-popover-foreground: #111827;
+
+  /* Muted / secondary text */
+  --brand-muted: #f3f4f6;
+  --brand-muted-foreground: #6b7280;
+
+  /* Borders & inputs */
+  --brand-border: #e5e7eb;
+  --brand-input: #e5e7eb;
+  --brand-ring: #2563eb;
+
+  /* Semantic state colors - Chinese market convention: red=up, green=down */
+  --brand-state-up: #ef4444;
+  --brand-state-up-bg: #fef2f2;
+  --brand-state-down: #22c55e;
+  --brand-state-down-bg: #f0fdf4;
+  --brand-state-warning: #f59e0b;
+  --brand-state-info: #3b82f6;
+
+  /* Radius scale */
+  --brand-radius-xs: 2px;
+  --brand-radius-sm: 4px;
+  --brand-radius-md: 8px;
+  --brand-radius-lg: 16px;
+  --brand-radius-pill: 999px;
+
+  /* Shadows */
+  --brand-shadow-1: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 1px rgba(15, 23, 42, 0.03);
+  --brand-shadow-2: 0 8px 24px -8px rgba(15, 23, 42, 0.18);
+
+  /* Typography */
+  --brand-font-sans: Inter, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --brand-font-mono: "SF Mono", "SFMono-Regular", ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
+
+  /* Semantic aliases required by head contract */
+  --brand-primary-50: #eff6ff;
+  --brand-primary-100: #dbeafe;
+  --brand-primary-900: #1e3a8a;
+  --brand-secondary: #f3f4f6;
+  --brand-secondary-foreground: #374151;
+  --brand-accent: #f3f4f6;
+  --brand-accent-foreground: #374151;
+  --brand-destructive: #ef4444;
+  --brand-destructive-foreground: #ffffff;
+}
+
+/* Light/dark agnostic: force light theme for this financial dashboard */
+html.light,
+html:not(.dark) {
+  color-scheme: light;
+}
+
+body {
+  font-family: var(--brand-font-sans);
+  background-color: var(--brand-background);
+  color: var(--brand-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular numbers for prices */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Chinese text wrap discipline */
+.cjk-wrap {
+  text-wrap: balance;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--brand-background);
+    --color-foreground: var(--brand-foreground);
+    --color-card: var(--brand-card);
+    --color-card-foreground: var(--brand-card-foreground);
+    --color-popover: var(--brand-popover);
+    --color-popover-foreground: var(--brand-popover-foreground);
+    --color-primary: var(--brand-primary);
+    --color-primary-foreground: var(--brand-primary-foreground);
+    --color-secondary: var(--brand-secondary);
+    --color-secondary-foreground: var(--brand-secondary-foreground);
+    --color-muted: var(--brand-muted);
+    --color-muted-foreground: var(--brand-muted-foreground);
+    --color-accent: var(--brand-accent);
+    --color-accent-foreground: var(--brand-accent-foreground);
+    --color-destructive: var(--brand-destructive);
+    --color-destructive-foreground: var(--brand-destructive-foreground);
+    --color-border: var(--brand-border);
+    --color-input: var(--brand-input);
+    --color-ring: var(--brand-ring);
+    --radius-sm: var(--brand-radius-sm);
+    --radius-md: var(--brand-radius-md);
+    --radius-lg: var(--brand-radius-lg);
+  }
+  @layer base {
+    body { background: var(--brand-background); color: var(--brand-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--brand-background); }
+      .text-background { color: var(--brand-background); }
+      .border-background { border-color: var(--brand-background); }
+      .ring-background { --tw-ring-color: var(--brand-background); }
+      .bg-foreground { background-color: var(--brand-foreground); }
+      .text-foreground { color: var(--brand-foreground); }
+      .border-foreground { border-color: var(--brand-foreground); }
+      .ring-foreground { --tw-ring-color: var(--brand-foreground); }
+      .bg-card { background-color: var(--brand-card); }
+      .text-card { color: var(--brand-card); }
+      .border-card { border-color: var(--brand-card); }
+      .ring-card { --tw-ring-color: var(--brand-card); }
+      .bg-card-foreground { background-color: var(--brand-card-foreground); }
+      .text-card-foreground { color: var(--brand-card-foreground); }
+      .border-card-foreground { border-color: var(--brand-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--brand-card-foreground); }
+      .bg-popover { background-color: var(--brand-popover); }
+      .text-popover { color: var(--brand-popover); }
+      .border-popover { border-color: var(--brand-popover); }
+      .ring-popover { --tw-ring-color: var(--brand-popover); }
+      .bg-popover-foreground { background-color: var(--brand-popover-foreground); }
+      .text-popover-foreground { color: var(--brand-popover-foreground); }
+      .border-popover-foreground { border-color: var(--brand-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--brand-popover-foreground); }
+      .bg-primary { background-color: var(--brand-primary); }
+      .text-primary { color: var(--brand-primary); }
+      .border-primary { border-color: var(--brand-primary); }
+      .ring-primary { --tw-ring-color: var(--brand-primary); }
+      .bg-primary-foreground { background-color: var(--brand-primary-foreground); }
+      .text-primary-foreground { color: var(--brand-primary-foreground); }
+      .border-primary-foreground { border-color: var(--brand-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--brand-primary-foreground); }
+      .bg-secondary { background-color: var(--brand-secondary); }
+      .text-secondary { color: var(--brand-secondary); }
+      .border-secondary { border-color: var(--brand-secondary); }
+      .ring-secondary { --tw-ring-color: var(--brand-secondary); }
+      .bg-secondary-foreground { background-color: var(--brand-secondary-foreground); }
+      .text-secondary-foreground { color: var(--brand-secondary-foreground); }
+      .border-secondary-foreground { border-color: var(--brand-secondary-foreground); }
+      .ring-secondary-foreground { --tw-ring-color: var(--brand-secondary-foreground); }
+      .bg-muted { background-color: var(--brand-muted); }
+      .text-muted { color: var(--brand-muted); }
+      .border-muted { border-color: var(--brand-muted); }
+      .ring-muted { --tw-ring-color: var(--brand-muted); }
+      .bg-muted-foreground { background-color: var(--brand-muted-foreground); }
+      .text-muted-foreground { color: var(--brand-muted-foreground); }
+      .border-muted-foreground { border-color: var(--brand-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--brand-muted-foreground); }
+      .bg-accent { background-color: var(--brand-accent); }
+      .text-accent { color: var(--brand-accent); }
+      .border-accent { border-color: var(--brand-accent); }
+      .ring-accent { --tw-ring-color: var(--brand-accent); }
+      .bg-accent-foreground { background-color: var(--brand-accent-foreground); }
+      .text-accent-foreground { color: var(--brand-accent-foreground); }
+      .border-accent-foreground { border-color: var(--brand-accent-foreground); }
+      .ring-accent-foreground { --tw-ring-color: var(--brand-accent-foreground); }
+      .bg-destructive { background-color: var(--brand-destructive); }
+      .text-destructive { color: var(--brand-destructive); }
+      .border-destructive { border-color: var(--brand-destructive); }
+      .ring-destructive { --tw-ring-color: var(--brand-destructive); }
+      .bg-destructive-foreground { background-color: var(--brand-destructive-foreground); }
+      .text-destructive-foreground { color: var(--brand-destructive-foreground); }
+      .border-destructive-foreground { border-color: var(--brand-destructive-foreground); }
+      .ring-destructive-foreground { --tw-ring-color: var(--brand-destructive-foreground); }
+      .bg-border { background-color: var(--brand-border); }
+      .text-border { color: var(--brand-border); }
+      .border-border { border-color: var(--brand-border); }
+      .ring-border { --tw-ring-color: var(--brand-border); }
+      .bg-input { background-color: var(--brand-input); }
+      .text-input { color: var(--brand-input); }
+      .border-input { border-color: var(--brand-input); }
+      .ring-input { --tw-ring-color: var(--brand-input); }
+      .bg-ring { background-color: var(--brand-ring); }
+      .text-ring { color: var(--brand-ring); }
+      .border-ring { border-color: var(--brand-ring); }
+      .ring-ring { --tw-ring-color: var(--brand-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+      <!-- Critical layout: mobile frame, max-w-md centered, document-scroll -->
+      <div class="max-w-md mx-auto min-h-screen bg-background relative">
+        <!-- Sticky header -->
+        <header class="sticky top-0 z-30 bg-card border-b border-border shadow-sm" id="status-bar">
+          <div class="px-3 pt-2 pb-1 flex items-center justify-between text-xs text-muted-foreground">
+            <span id="tick-time" class="tabular-nums">11:08:00</span>
+            <span class="text-[10px] cjk-wrap">实时行情 · 数据仅供参考</span>
+          </div>
+          <div id="risk-disclaimer" class="px-3 py-1 bg-primary-50 text-[10px] text-primary-700 cjk-wrap leading-tight">
+            风险提示：内容仅为公开市场数据整理，不构成投资建议，历史表现不代表未来走势。
+          </div>
+          <div class="px-3 py-2 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <h1 class="text-lg font-bold text-foreground cjk-wrap">板块涨停</h1>
+              <span class="inline-flex items-center rounded-sm bg-state-up-bg px-1.5 py-0.5 text-[10px] font-semibold" style="color: var(--brand-state-up);">A股</span>
+            </div>
+            <a href="index.html" class="text-xs text-primary font-medium hover:underline">连板天梯</a>
+          </div>
+          <div id="index-ticker" class="px-3 py-2 bg-muted/50">
+            <div class="grid grid-cols-3 gap-2">
+              <div class="index-item text-center" data-index="上证指数" data-code="000001">
+                <div class="text-xs font-medium text-foreground mb-0.5"><span class="index-name">上证指数</span><span class="index-arrow ml-0.5" style="color: var(--brand-state-up);">↑</span></div>
+                <div class="text-sm font-bold tabular-nums index-value" style="color: var(--brand-state-up);">3956.57</div>
+                <div class="text-[10px] font-medium tabular-nums index-change" style="color: var(--brand-state-up);">+44.05 +1.13%</div>
+              </div>
+              <div class="index-item text-center" data-index="创业板指" data-code="399006">
+                <div class="text-xs font-medium text-foreground mb-0.5"><span class="index-name">创业板指</span><span class="index-arrow ml-0.5" style="color: var(--brand-state-up);">↑</span></div>
+                <div class="text-sm font-bold tabular-nums index-value" style="color: var(--brand-state-up);">--</div>
+                <div class="text-[10px] font-medium tabular-nums index-change" style="color: var(--brand-state-up);">--</div>
+              </div>
+              <div class="index-item text-center" data-index="科创50" data-code="000688">
+                <div class="text-xs font-medium text-foreground mb-0.5"><span class="index-name">科创50</span><span class="index-arrow ml-0.5" style="color: var(--brand-state-up);">↑</span></div>
+                <div class="text-sm font-bold tabular-nums index-value" style="color: var(--brand-state-up);">--</div>
+                <div class="text-[10px] font-medium tabular-nums index-change" style="color: var(--brand-state-up);">--</div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Sector tag cloud -->
+        <section id="sector-cloud" class="bg-card border-b border-border">
+          <div class="relative">
+            <div class="sector-scroll px-3 py-2 overflow-x-auto no-scrollbar flex" style="-webkit-overflow-scrolling: touch; scroll-behavior: smooth; touch-action: pan-x;">
+              <div class="flex gap-2 min-w-max pr-6">
+                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-primary text-primary-foreground whitespace-nowrap snap-start" data-sector="光通信">光通信</button>
+                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="大农业">大农业</button>
+                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="国产芯片">国产芯片</button>
+                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="PCB板">PCB板</button>
+                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="大金融">大金融</button>
+                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="液冷服务器">液冷服务器</button>
+                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="医药">医药</button>
+                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="机器人">机器人</button>
+                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="光伏">光伏</button>
+              </div>
+            </div>
+            <div class="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-card to-transparent" aria-hidden="true"></div>
+          </div>
+        </section>
+
+        <!-- Top tab switcher -->
+        <nav class="bg-card px-3 border-b border-border">
+          <div class="flex gap-4 overflow-x-auto no-scrollbar" role="tablist" aria-label="行情视图">
+            <a id="tab-ladder" role="tab" href="index.html" class="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">连板天梯</a>
+            <a id="tab-sectors" role="tab" href="sectors.html" class="relative py-2.5 text-sm font-semibold text-primary border-b-2 border-primary whitespace-nowrap">板块涨停</a>
+            <a id="tab-dragon" role="tab" href="dragon-tiger.html" class="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">龙虎榜</a>
+            <a id="tab-broken" role="tab" href="broken-boards.html" class="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">炸板池</a>
+            <a id="tab-watch" role="tab" href="watchlist.html" class="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">自选股</a>
+          </div>
+        </nav>
+
+        <!-- Sector view -->
+        <section id="sector-view" class="px-3 py-3 space-y-3">
+          <!-- Sub-tabs -->
+          <div class="flex gap-2" role="tablist" aria-label="板块视图">
+            <button id="subtab-industry" role="tab" aria-selected="true" class="subtab-btn flex-1 py-2 text-sm font-semibold rounded-md bg-primary text-primary-foreground transition-colors" data-target="industry-panel">
+              行业
+            </button>
+            <button id="subtab-stock" role="tab" aria-selected="false" class="subtab-btn flex-1 py-2 text-sm font-medium rounded-md bg-secondary text-secondary-foreground hover:bg-muted transition-colors" data-target="stock-panel">
+              公司
+            </button>
+          </div>
+
+          <!-- Industry panel -->
+          <div id="industry-panel" class="subtab-panel space-y-3">
+            <!-- 光通信 -->
+            <article class="bg-card rounded-lg border border-border shadow-sm overflow-hidden" data-sector-group="光通信">
+              <div class="px-3 py-2 bg-primary-50 border-b border-border flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-foreground cjk-wrap">光通信</span>
+                </div>
+                <span class="text-xs text-muted-foreground">3 只</span>
+              </div>
+              <div class="divide-y divide-border" data-sector-rows="光通信">
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="300502" data-change="10.00">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">新易盛</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:36</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">2板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="002897" data-change="10.01">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">意华股份</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:32</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">首板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="300308" data-change="9.99">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">中际旭创</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:37</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">首板</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 国产芯片 -->
+            <article class="bg-card rounded-lg border border-border shadow-sm overflow-hidden" data-sector-group="国产芯片">
+              <div class="px-3 py-2 bg-primary-50 border-b border-border flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-foreground cjk-wrap">国产芯片</span>
+                </div>
+                <span class="text-xs text-muted-foreground">3 只</span>
+              </div>
+              <div class="divide-y divide-border" data-sector-rows="国产芯片">
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="603933" data-change="9.98">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">睿能科技</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:33</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">2板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="603160" data-change="10.00">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">汇顶科技</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:35</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">首板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="002156" data-change="10.00">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">通富微电</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:40</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">首板</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 大金融 -->
+            <article class="bg-card rounded-lg border border-border shadow-sm overflow-hidden" data-sector-group="大金融">
+              <div class="px-3 py-2 bg-primary-50 border-b border-border flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-foreground cjk-wrap">大金融</span>
+                </div>
+                <span class="text-xs text-muted-foreground">1 只</span>
+              </div>
+              <div class="divide-y divide-border" data-sector-rows="大金融">
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="000750" data-change="10.00">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">国海证券</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:30</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">2板</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 大农业 -->
+            <article class="bg-card rounded-lg border border-border shadow-sm overflow-hidden" data-sector-group="大农业">
+              <div class="px-3 py-2 bg-primary-50 border-b border-border flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-foreground cjk-wrap">大农业</span>
+                </div>
+                <span class="text-xs text-muted-foreground">1 只</span>
+              </div>
+              <div class="divide-y divide-border" data-sector-rows="大农业">
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="002385" data-change="9.99">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">大北农</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:31</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">2板</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- PCB板 -->
+            <article class="bg-card rounded-lg border border-border shadow-sm overflow-hidden" data-sector-group="PCB板">
+              <div class="px-3 py-2 bg-primary-50 border-b border-border flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-foreground cjk-wrap">PCB板</span>
+                </div>
+                <span class="text-xs text-muted-foreground">1 只</span>
+              </div>
+              <div class="divide-y divide-border" data-sector-rows="PCB板">
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="002436" data-change="9.99">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">兴森科技</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:38</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">2板</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 医药 -->
+            <article class="bg-card rounded-lg border border-border shadow-sm overflow-hidden" data-sector-group="医药">
+              <div class="px-3 py-2 bg-primary-50 border-b border-border flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-foreground cjk-wrap">医药</span>
+                </div>
+                <span class="text-xs text-muted-foreground">1 只</span>
+              </div>
+              <div class="divide-y divide-border" data-sector-rows="医药">
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="605118" data-change="10.02">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">翼衡医药</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:30</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">3板</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 黄金 -->
+            <article class="bg-card rounded-lg border border-border shadow-sm overflow-hidden" data-sector-group="黄金">
+              <div class="px-3 py-2 bg-primary-50 border-b border-border flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-foreground cjk-wrap">黄金</span>
+                </div>
+                <span class="text-xs text-muted-foreground">1 只</span>
+              </div>
+              <div class="divide-y divide-border" data-sector-rows="黄金">
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="000017" data-change="10.02">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">深中华A</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:35</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">6板</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 资产重组 -->
+            <article class="bg-card rounded-lg border border-border shadow-sm overflow-hidden" data-sector-group="资产重组">
+              <div class="px-3 py-2 bg-primary-50 border-b border-border flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-foreground cjk-wrap">资产重组</span>
+                </div>
+                <span class="text-xs text-muted-foreground">1 只</span>
+              </div>
+              <div class="divide-y divide-border" data-sector-rows="资产重组">
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="603269" data-change="10.00">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">海鸥住工</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:30</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">4板</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 其他 -->
+            <article class="bg-card rounded-lg border border-border shadow-sm overflow-hidden" data-sector-group="其他">
+              <div class="px-3 py-2 bg-primary-50 border-b border-border flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-foreground cjk-wrap">其他</span>
+                </div>
+                <span class="text-xs text-muted-foreground">5 只</span>
+              </div>
+              <div class="divide-y divide-border" data-sector-rows="其他">
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="603178" data-change="10.01">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">楚天龙</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">13:18</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">5板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="002796" data-change="10.01">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">世嘉科技</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:30</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">3板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="603013" data-change="9.99">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">亚普股份</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:35</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">3板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="000953" data-change="10.00">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">河化股份</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:40</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">3板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="002094" data-change="9.98">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">青岛金王</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:45</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">3板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="000938" data-change="9.98">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">中材国际</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:30</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">首板</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <!-- Stock panel -->
+          <div id="stock-panel" class="subtab-panel hidden space-y-2">
+            <article class="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
+              <div class="divide-y divide-border" data-stock-list>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="000017" data-change="10.02">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">深中华A</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">黄金</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:35</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">6板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="603178" data-change="10.01">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">楚天龙</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">数字货币</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">13:18</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">5板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="603269" data-change="10.00">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">海鸥住工</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">资产重组</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:30</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">4板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="605118" data-change="10.02">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">翼衡医药</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">医药</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:30</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">3板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="002796" data-change="10.01">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">世嘉科技</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">通信</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:30</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">3板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="603013" data-change="9.99">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">亚普股份</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">汽车零部件</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:35</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">3板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="000953" data-change="10.00">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">河化股份</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">化工</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:40</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">3板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="002094" data-change="9.98">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">青岛金王</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">跨境支付</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:45</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">3板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="000750" data-change="10.00">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">国海证券</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">大金融</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:30</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">2板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="002385" data-change="9.99">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">大北农</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">大农业</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:31</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">2板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="603933" data-change="9.98">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">睿能科技</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">国产芯片</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:33</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">2板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="300502" data-change="10.00">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">新易盛</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">光通信</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:36</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">2板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="002436" data-change="9.99">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">兴森科技</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">PCB板</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:38</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">2板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="000938" data-change="9.98">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">中材国际</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">中字头</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:30</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">首板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="002897" data-change="10.01">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">意华股份</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">光通信</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:32</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">首板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="603160" data-change="10.00">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">汇顶科技</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">国产芯片</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:35</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">首板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="300308" data-change="9.99">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">中际旭创</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">光通信</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:37</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">首板</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2.5 flex items-center justify-between gap-2" data-stock="002156" data-change="10.00">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-bold text-foreground cjk-wrap">通富微电</span>
+                    <span class="px-1 py-0.5 rounded-sm text-[10px] font-medium bg-state-up-bg" style="color: var(--brand-state-up);">国产芯片</span>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="text-xs text-muted-foreground tabular-nowrap">09:40</span>
+                    <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-state-up-bg" style="color: var(--brand-state-up);">首板</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- Empty state -->
+        <section id="empty-state" class="hidden px-4 py-12 text-center" aria-live="polite">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-3">
+            <i data-lucide="inbox" class="w-6 h-6 text-muted-foreground"></i>
+          </div>
+          <h2 class="text-base font-semibold text-foreground mb-1">暂无涨停数据</h2>
+          <p class="text-sm text-muted-foreground">当前市场未收录涨停个股，请稍后再试。</p>
+        </section>
+
+        <!-- Error state -->
+        <section id="error-state" class="hidden px-4 py-12 text-center" aria-live="assertive">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-destructive/10 mb-3">
+            <i data-lucide="alert-circle" class="w-6 h-6 text-destructive"></i>
+          </div>
+          <h2 class="text-base font-semibold text-foreground mb-1">行情加载失败</h2>
+          <p class="text-sm text-muted-foreground mb-3">网络连接异常或数据源暂时不可用。</p>
+          <button onclick="fetchMarketData()" class="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium">
+            重新加载
+          </button>
+        </section>
+
+        <!-- Real-time footer -->
+        <footer class="real-time-footer px-3 py-3 bg-card border-t border-border">
+          <div class="flex items-center justify-between text-xs text-muted-foreground">
+            <div class="flex items-center gap-1.5">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-state-up opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2" style="background-color: var(--brand-state-up);"></span>
+              </span>
+              <span class="tabular-nums" id="footer-tick-time">11:08:00</span>
+            </div>
+            <span class="text-[10px] cjk-wrap" id="footer-desc">板块涨停 · 东方财富实时行情</span>
+          </div>
+        </footer>
+      </div>
+    </main>
+
+    <!-- Static critical-layout CSS for mobile frame and first-screen regions -->
+    <style>
+      :root {
+        --market-up: var(--brand-state-up);
+        --market-down: var(--brand-state-down);
+      }
+      .bg-state-up-bg { background-color: var(--brand-state-up-bg); }
+      .bg-state-down-bg { background-color: var(--brand-state-down-bg); }
+      .text-state-up { color: var(--brand-state-up); }
+      .text-state-down { color: var(--brand-state-down); }
+      .rounded-pill { border-radius: var(--brand-radius-pill); }
+      .tabbar-nowrap { white-space: nowrap; }
+      .tabular-nowrap { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+      /* Mobile frame: prevent horizontal overflow and pin footer flow */
+      html, body { overflow-x: hidden; }
+      main > div { max-width: 28rem; }
+
+      /* Sticky header safe stacking */
+      header { position: sticky; top: 0; }
+
+      /* Critical list row geometry: avoid text compression */
+      [data-sector-rows] > div,
+      [data-stock-list] > div { min-height: 2.75rem; }
+      [data-sector-rows] .cjk-wrap,
+      [data-stock-list] .cjk-wrap { word-break: keep-all; }
+
+      /* Sector cloud pill min-touch */
+      .sector-pill { touch-action: manipulation; }
+
+      /* Footer spacing */
+      .real-time-footer { margin-top: auto; }
+    </style>
+
+    <script type="module">
+      import { fetchIndex, fetchSectors, renderIndexTicker, renderSectors, updateTickTime, wiggleStocks } from './api-client.js?v=4';
+      import { initStockPopup } from './stock-popup.js';
+      import { attachStarButtons } from './watchlist.js?v=1';
+
+      initStockPopup();
+
+      async function loadMarketData() {
+        try {
+          const [index, sectors] = await Promise.all([fetchIndex(), fetchSectors()]);
+          renderIndexTicker(index);
+          renderSectors(sectors);
+          applySectorFilter();
+          syncSectorPills();
+          attachStarButtons(document.getElementById('sector-view'));
+          const desc = document.getElementById('footer-desc');
+          if (desc) desc.textContent = '板块涨停 · 东方财富实时行情';
+        } catch (err) {
+          console.warn('真实行情加载失败，保留本地示例数据：', err.message);
+        }
+      }
+      window.fetchMarketData = loadMarketData;
+
+      function tick() {
+        updateTickTime();
+        wiggleStocks();
+      }
+
+      // 首次加载真实行情，随后轮询
+      loadMarketData();
+      setInterval(loadMarketData, 5000);
+      setInterval(tick, 3000);
+      tick();
+
+      // Sector pill filter
+      let activeSector = null;
+      function applySectorFilter() {
+        document.querySelectorAll('#industry-panel article[data-sector-group]').forEach(article => {
+          const match = !activeSector || article.dataset.sectorGroup === activeSector;
+          article.style.display = match ? '' : 'none';
+        });
+        const stockList = document.querySelector('[data-stock-list]');
+        if (stockList) {
+          stockList.querySelectorAll(':scope > [data-stock]').forEach(row => {
+            const concepts = (row.dataset.concepts || '').split(' ');
+            const match = !activeSector || concepts.includes(activeSector);
+            row.style.display = match ? '' : 'none';
+          });
+        }
+      }
+
+      function syncSectorPills() {
+        const groups = new Set();
+        document.querySelectorAll('#industry-panel article[data-sector-group]').forEach(article => {
+          groups.add(article.dataset.sectorGroup);
+        });
+        const concepts = new Set();
+        const stockList = document.querySelector('[data-stock-list]');
+        if (stockList) {
+          stockList.querySelectorAll(':scope > [data-stock]').forEach(row => {
+            (row.dataset.concepts || '').split(' ').forEach(c => concepts.add(c));
+          });
+        }
+        document.querySelectorAll('.sector-pill').forEach(btn => {
+          const sector = btn.dataset.sector;
+          const hasContent = groups.has(sector) || concepts.has(sector);
+          btn.style.display = hasContent ? '' : 'none';
+        });
+      }
+
+      document.querySelectorAll('.sector-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const sector = btn.dataset.sector;
+          activeSector = activeSector === sector ? null : sector;
+          document.querySelectorAll('.sector-pill').forEach(b => {
+            const isActive = b.dataset.sector === activeSector;
+            b.classList.toggle('bg-primary', isActive);
+            b.classList.toggle('text-primary-foreground', isActive);
+            b.classList.toggle('bg-secondary', !isActive);
+            b.classList.toggle('text-secondary-foreground', !isActive);
+          });
+          applySectorFilter();
+        });
+      });
+
+      // Sub-tab switching (industry / company)
+      document.querySelectorAll('.subtab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.dataset.target;
+          document.querySelectorAll('.subtab-btn').forEach(b => {
+            const isActive = b === btn;
+            b.setAttribute('aria-selected', String(isActive));
+            b.classList.toggle('bg-primary', isActive);
+            b.classList.toggle('text-primary-foreground', isActive);
+            b.classList.toggle('font-semibold', isActive);
+            b.classList.toggle('bg-secondary', !isActive);
+            b.classList.toggle('text-secondary-foreground', !isActive);
+            b.classList.toggle('font-medium', !isActive);
+          });
+          document.querySelectorAll('.subtab-panel').forEach(p => {
+            p.classList.toggle('hidden', p.id !== targetId);
+          });
+        });
+      });
+
+      // Initialize icons
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    </script>
+</body>
+</html>
