@@ -208,7 +208,7 @@ body { font-family: var(--brand-font-sans); background-color: var(--brand-backgr
     </style>
 
     <script type="module">
-      import { fetchIndex, renderIndexTicker, updateTickTime } from './api-client.js?v=3';
+      import { fetchIndex, fetchDragonTiger, renderIndexTicker, updateTickTime } from './api-client.js?v=3';
       import { initStockPopup } from './stock-popup.js';
       import { attachStarButtons } from './watchlist.js?v=1';
 
@@ -221,12 +221,6 @@ body { font-family: var(--brand-font-sans); background-color: var(--brand-backgr
 
       function upDownColorClass(v) {
         return Number(v) >= 0 ? 'text-state-up' : 'text-state-down';
-      }
-
-      async function fetchDragonTiger() {
-        const res = await fetch('/api/dragon-tiger');
-        if (!res.ok) throw new Error('fetch failed');
-        return res.json();
       }
 
       function renderDragonTiger(data) {
