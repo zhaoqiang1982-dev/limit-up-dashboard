@@ -269,16 +269,8 @@ body {
         <section id="sector-cloud" class="bg-card border-b border-border">
           <div class="relative">
             <div class="sector-scroll px-3 py-2 overflow-x-auto no-scrollbar flex" style="-webkit-overflow-scrolling: touch; scroll-behavior: smooth; touch-action: pan-x;">
-              <div class="flex gap-2 min-w-max pr-6">
-                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-primary text-primary-foreground whitespace-nowrap snap-start" data-sector="光通信">光通信</button>
-                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="大农业">大农业</button>
-                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="国产芯片">国产芯片</button>
-                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="PCB板">PCB板</button>
-                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="大金融">大金融</button>
-                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="液冷服务器">液冷服务器</button>
-                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="医药">医药</button>
-                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="机器人">机器人</button>
-                <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium bg-secondary text-secondary-foreground whitespace-nowrap snap-start" data-sector="光伏">光伏</button>
+              <div id="sector-pills" class="flex gap-2 min-w-max pr-6">
+                <!-- 根据连板股票概念动态生成 -->
               </div>
             </div>
             <div class="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-card to-transparent" aria-hidden="true"></div>
@@ -690,19 +682,39 @@ body {
       }
 
       function syncSectorPills() {
-        const concepts = new Set();
+        const container = document.getElementById('sector-pills');
+        if (!container) return;
+
+        const counts = new Map();
         document.querySelectorAll('#ladder-view [data-board-rows] > [data-stock]').forEach(row => {
-          if (row.dataset.concepts) {
-            row.dataset.concepts.split(' ').forEach(c => concepts.add(c));
-          } else {
-            row.querySelectorAll('.bg-state-up-bg').forEach(el => {
-              const c = el.textContent.trim();
-              if (c) concepts.add(c);
-            });
-          }
+          const concepts = row.dataset.concepts
+            ? row.dataset.concepts.split(' ').filter(Boolean)
+            : Array.from(row.querySelectorAll('.bg-state-up-bg')).map(el => el.textContent.trim()).filter(Boolean);
+          concepts.forEach(c => {
+            counts.set(c, (counts.get(c) || 0) + 1);
+          });
         });
-        document.querySelectorAll('.sector-pill').forEach(btn => {
-          btn.style.display = concepts.has(btn.dataset.sector) ? '' : 'none';
+
+        // 按出现次数降序，次数相同按拼音/字母升序
+        const sorted = Array.from(counts.entries()).sort((a, b) => {
+          if (b[1] !== a[1]) return b[1] - a[1];
+          return a[0].localeCompare(b[0], 'zh-CN');
+        });
+
+        container.innerHTML = sorted.map(([concept, count]) => `
+          <button class="sector-pill px-2.5 py-1 rounded-pill text-xs font-medium whitespace-nowrap snap-start ${concept === activeSector ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}" data-sector="${concept}">
+            ${concept}（${count}）
+          </button>
+        `).join('');
+      }
+
+      function updateSectorPillsUI() {
+        document.querySelectorAll('#sector-pills .sector-pill').forEach(b => {
+          const isActive = b.dataset.sector === activeSector;
+          b.classList.toggle('bg-primary', isActive);
+          b.classList.toggle('text-primary-foreground', isActive);
+          b.classList.toggle('bg-secondary', !isActive);
+          b.classList.toggle('text-secondary-foreground', !isActive);
         });
       }
 
@@ -772,23 +784,13 @@ body {
         updateMoreButtons();
       });
 
-      document.querySelectorAll('.sector-pill').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const sector = btn.dataset.sector;
-          if (activeSector === sector) {
-            activeSector = null;
-          } else {
-            activeSector = sector;
-          }
-          document.querySelectorAll('.sector-pill').forEach(b => {
-            const isActive = b.dataset.sector === activeSector;
-            b.classList.toggle('bg-primary', isActive);
-            b.classList.toggle('text-primary-foreground', isActive);
-            b.classList.toggle('bg-secondary', !isActive);
-            b.classList.toggle('text-secondary-foreground', !isActive);
-          });
-          applyLadderFilter();
-        });
+      document.getElementById('sector-pills').addEventListener('click', (e) => {
+        const btn = e.target.closest('.sector-pill');
+        if (!btn) return;
+        const sector = btn.dataset.sector;
+        activeSector = activeSector === sector ? null : sector;
+        updateSectorPillsUI();
+        applyLadderFilter();
       });
 
       // Initialize icons
