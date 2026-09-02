@@ -14,6 +14,24 @@ export function formatDashDate(d) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+export function getPreviousTradeDates(baseDate, count = 5) {
+  const dates = [];
+  const d = new Date(baseDate);
+  while (dates.length < count) {
+    d.setDate(d.getDate() - 1);
+    const day = d.getDay();
+    // A股周末休市
+    if (day !== 0 && day !== 6) {
+      dates.push(formatDashDate(d));
+    }
+  }
+  return dates;
+}
+
+function normalizeTradeDate(tradeDate) {
+  return String(tradeDate || '').split(' ')[0];
+}
+
 export function parseScaled(v, scale = 100) {
   if (v === undefined || v === null || v === '-' || v === '') return 0;
   return Number(v) / scale;
@@ -415,37 +433,46 @@ export async function fetchBrokenBoardsDirect() {
 
 export async function fetchDragonTigerDirect() {
   try {
-    const date = formatDashDate(new Date());
-    const target = `https://datacenter-web.eastmoney.com/api/data/v1/get?sortColumns=NET_BUY_AMT,TRADE_DATE,SECURITY_CODE&sortTypes=-1,-1,1&pageSize=100&pageNumber=1&reportName=RPT_ORGANIZATION_TRADE_DETAILS&columns=ALL&source=WEB&client=WEB&filter=(TRADE_DATE%3E=%27${date}%27)`;
-    const res = await fetch(target, { mode: 'cors' }).then((r) => r.json());
-    const rows = (res.result && res.result.data) || [];
-    const map = new Map();
-    rows.forEach((item) => {
-      const code = item.SECURITY_CODE;
-      const net = Number(item.NET_BUY_AMT || 0);
-      if (!map.has(code)) {
-        map.set(code, {
-          code,
-          name: item.SECURITY_NAME_ABBR,
-          close: Number(item.CLOSE_PRICE || 0),
-          changePercent: Number(item.CHANGE_RATE || 0),
-          buyTimes: Number(item.BUY_TIMES || 0),
-          sellTimes: Number(item.SELL_TIMES || 0),
-          netBuyAmt: 0,
-          accumAmount: Number(item.ACCUM_AMOUNT || 0) / 10000,
-          turnoverRate: Number(item.TURNOVERRATE || 0),
-          explanations: new Set(),
-          tradeDate: item.TRADE_DATE
-        });
-      }
-      const rec = map.get(code);
-      rec.netBuyAmt += net / 10000;
-      if (item.EXPLANATION) rec.explanations.add(item.EXPLANATION);
-    });
-    const list = Array.from(map.values())
-      .map((r) => ({ ...r, explanations: Array.from(r.explanations) }))
-      .sort((a, b) => b.netBuyAmt - a.netBuyAmt);
-    return { list, updatedAt: new Date().toISOString() };
+    const today = formatDashDate(new Date());
+    const candidates = [today, ...getPreviousTradeDates(new Date(), 5)];
+
+    for (const date of candidates) {
+      const target = `https://datacenter-web.eastmoney.com/api/data/v1/get?sortColumns=NET_BUY_AMT,TRADE_DATE,SECURITY_CODE&sortTypes=-1,-1,1&pageSize=100&pageNumber=1&reportName=RPT_ORGANIZATION_TRADE_DETAILS&columns=ALL&source=WEB&client=WEB&filter=(TRADE_DATE%3E=%27${date}%27)`;
+      const res = await fetch(target, { mode: 'cors' }).then((r) => r.json());
+      const rows = ((res.result && res.result.data) || [])
+        .filter((item) => normalizeTradeDate(item.TRADE_DATE) === date);
+      if (rows.length === 0) continue;
+
+      const map = new Map();
+      rows.forEach((item) => {
+        const code = item.SECURITY_CODE;
+        const net = Number(item.NET_BUY_AMT || 0);
+        if (!map.has(code)) {
+          map.set(code, {
+            code,
+            name: item.SECURITY_NAME_ABBR,
+            close: Number(item.CLOSE_PRICE || 0),
+            changePercent: Number(item.CHANGE_RATE || 0),
+            buyTimes: Number(item.BUY_TIMES || 0),
+            sellTimes: Number(item.SELL_TIMES || 0),
+            netBuyAmt: 0,
+            accumAmount: Number(item.ACCUM_AMOUNT || 0) / 10000,
+            turnoverRate: Number(item.TURNOVERRATE || 0),
+            explanations: new Set(),
+            tradeDate: item.TRADE_DATE
+          });
+        }
+        const rec = map.get(code);
+        rec.netBuyAmt += net / 10000;
+        if (item.EXPLANATION) rec.explanations.add(item.EXPLANATION);
+      });
+      const list = Array.from(map.values())
+        .map((r) => ({ ...r, explanations: Array.from(r.explanations) }))
+        .sort((a, b) => b.netBuyAmt - a.netBuyAmt);
+      return { list, updatedAt: new Date().toISOString(), tradeDate: date };
+    }
+
+    return { list: [], updatedAt: new Date().toISOString(), tradeDate: today };
   } catch (e) {
     console.warn('[dragon-tiger direct]', e.message);
     return { list: [], error: e.message, updatedAt: new Date().toISOString() };
