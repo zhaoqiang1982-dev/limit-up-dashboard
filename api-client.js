@@ -13,7 +13,7 @@ import {
   fetchQuotesDirect,
   fetchSearchDirect,
   fetchStockDetailDirect
-} from './market-data.js?v=1';
+} from './market-data.js?v=2';
 
 export const API_BASE = '';
 
